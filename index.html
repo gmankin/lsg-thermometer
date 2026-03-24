@@ -336,11 +336,11 @@ You must also register this exact URI in Azure Portal under
 App Registration > Authentication > Add a platform > Single-page application
 ================================================================
 */
-var TENANT_ID    = 'YOUR_TENANT_ID_HERE';
-var CLIENT_ID    = 'YOUR_CLIENT_ID_HERE';
-var SITE_ID      = 'YOUR_SHAREPOINT_SITE_ID_HERE';
-var LIST_ID      = 'YOUR_LIST_ID_HERE';
-var REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
+var TENANT_ID    = ac94002d-ed28-40fb-b0ad-675cd7a9fc9c;
+var CLIENT_ID    = 31afbd48-7ad7-470b-b495-18ed9ed04f43;
+var SITE_ID      = https://graph.microsoft.com/v1.0/sites/lightingsupplyguy.sharepoint.com:/sites/root;
+var LIST_ID      = https://graph.microsoft.com/v1.0/sites/{SITE_ID}/lists?$filter=displayName eq 'WeeklySales';
+var REDIRECT_URI = https://gmankin.github.io/lsg-thermometer/;
 
 /*
 ================================================================
