@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Weekly Sales Thermometer — Lighting Supply Guy</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f4f0;
+    color: #1a1a18;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+  .page { max-width: 700px; margin: 0 auto; }
+
+  /* ── sign-in screen ── */
+  .signin-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 16px;
+    text-align: center;
+  }
+  .signin-screen h1 { font-size: 22px; font-weight: 500; }
+  .signin-screen p  { font-size: 14px; color: #5f5e5a; max-width: 340px; line-height: 1.6; }
+  .signin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 0.5px solid #b4b2a9;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a18;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .signin-btn:hover { background: #eeecea; }
+  .ms-logo { width: 20px; height: 20px; flex-shrink: 0; }
+
+  /* ── main app ── */
+  .app-screen { display: none; }
+  .page-header { margin-bottom: 1.75rem; }
+  .page-header h1 { font-size: 22px; font-weight: 500; }
+  .page-header p  { font-size: 13px; color: #5f5e5a; margin-top: 5px; }
+  .page-header .user-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .page-header .user-name { font-size: 12px; color: #5f5e5a; }
+  .signout-btn {
+    font-size: 11px;
+    color: #5f5e5a;
+    background: none;
+    border: 0.5px solid #d3d1c7;
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+  }
+  .signout-btn:hover { background: #eeecea; }
+
+  .status-bar {
+    font-size: 12px;
+    color: #5f5e5a;
+    padding: 6px 10px;
+    background: #eeecea;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+  }
+  .status-bar.error   { color: #993c1d; background: #faece7; }
+  .status-bar.success { color: #0f6e56; background: #e1f5ee; }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: #5f5e5a;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .field input {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 15px;
+    font-weight: 500;
+    border: 0.5px solid #b4b2a9;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a18;
+  }
+  .field input:focus   { outline: none; border-color: #5f5e5a; }
+  .field input[readonly] { background: #f5f4f0; color: #888780; }
+
+  .main { display: flex; gap: 24px; align-items: flex-start; }
+  .thermo-col { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+  .thermo-label { font-size: 12px; color: #5f5e5a; text-align: center; }
+
+  .stats-col { flex: 1; }
+  .stat-card { background: #eeecea; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .stat-card .s-label { font-size: 11px; color: #5f5e5a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .stat-card .s-val   { font-size: 26px; font-weight: 500; color: #1a1a18; }
+  .stat-card .s-sub   { font-size: 12px; color: #5f5e5a; margin-top: 2px; }
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .weeks-section { margin-top: 1.75rem; }
+  .weeks-section h3 { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+
+  .week-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .week-row .wk-label { font-size: 12px; color: #5f5e5a; width: 54px; flex-shrink: 0; }
+  .week-row .wk-date  { font-size: 11px; color: #888780; width: 78px; flex-shrink: 0; }
+  .week-row .wk-bar-wrap { flex: 1; height: 20px; background: #eeecea; border-radius: 4px; overflow: hidden; }
+  .week-row .wk-bar   { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
+  .week-row .wk-pct   { font-size: 12px; color: #5f5e5a; width: 38px; text-align: right; flex-shrink: 0; }
+  .week-row .wk-amt   { font-size: 12px; color: #5f5e5a; width: 68px; text-align: right; flex-shrink: 0; }
+  .remove-btn { font-size: 11px; color: #b4b2a9; cursor: pointer; padding: 0 4px; flex-shrink: 0; }
+  .remove-btn:hover { color: #993c1d; }
+
+  .log-section { margin-top: 1.5rem; }
+  .log-section h3 { font-size: 14px; font-weight: 500; margin-bottom: 10px; }
+  .log-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+  .log-form .lf-field { display: flex; flex-direction: column; gap: 5px; }
+  .log-form .lf-field label { font-size: 11px; color: #5f5e5a; text-transform: uppercase; letter-spacing: 0.05em; }
+  .log-form input[type="text"],
+  .log-form input[type="number"],
+  .log-form input[type="date"] {
+    padding: 7px 10px;
+    font-size: 13px;
+    border: 0.5px solid #b4b2a9;
+    border-radius: 6px;
+    background: #fff;
+    color: #1a1a18;
+  }
+  .log-form input[type="text"]   { width: 90px; }
+  .log-form input[type="number"] { width: 150px; }
+  .log-form input[type="date"]   { width: 148px; }
+  .log-form button {
+    padding: 7px 18px;
+    font-size: 13px;
+    border: 0.5px solid #b4b2a9;
+    border-radius: 6px;
+    background: #fff;
+    color: #1a1a18;
+    cursor: pointer;
+    height: 34px;
+  }
+  .log-form button:hover    { background: #eeecea; }
+  .log-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .footer {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 0.5px solid #d3d1c7;
+    font-size: 11px;
+    color: #888780;
+  }
+
+  @media (max-width: 480px) {
+    .controls { grid-template-columns: 1fr; }
+    .main { flex-direction: column; align-items: center; }
+    .stats-col { width: 100%; }
+    .log-form { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     SIGN-IN SCREEN (shown before authentication)
+     ════════════════════════════════════════════ -->
+<div class="page" id="signinScreen">
+  <div class="signin-screen">
+    <svg class="ms-logo" style="width:48px;height:48px;" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1"  y="1"  width="10" height="10" fill="#f25022"/>
+      <rect x="12" y="1"  width="10" height="10" fill="#7fba00"/>
+      <rect x="1"  y="12" width="10" height="10" fill="#00a4ef"/>
+      <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
+    </svg>
+    <h1>Weekly Sales Thermometer</h1>
+    <p>Sign in with your Lighting Supply Guy Microsoft account to view and update the weekly sales tracker.</p>
+    <button class="signin-btn" id="signinBtn">
+      <svg class="ms-logo" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1"  y="1"  width="10" height="10" fill="#f25022"/>
+        <rect x="12" y="1"  width="10" height="10" fill="#7fba00"/>
+        <rect x="1"  y="12" width="10" height="10" fill="#00a4ef"/>
+        <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
+      </svg>
+      Sign in with Microsoft
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     MAIN APP SCREEN (shown after authentication)
+     ════════════════════════════════════════════ -->
+<div class="page app-screen" id="appScreen">
+
+  <div class="page-header">
+    <h1>Weekly sales thermometer</h1>
+    <p>Data stored in SharePoint. Visible to all team members. Update each Monday morning.</p>
+    <div class="user-row">
+      <span class="user-name" id="userName"></span>
+      <button class="signout-btn" id="signoutBtn">Sign out</button>
+    </div>
+  </div>
+
+  <div class="status-bar" id="statusBar">Loading data from SharePoint...</div>
+
+  <div class="controls">
+    <div class="field">
+      <label>Weekly goal ($)</label>
+      <input type="number" id="goalInput" value="75000" min="0" step="1000" />
+    </div>
+    <div class="field">
+      <label>Current week (most recent)</label>
+      <input type="number" id="currentInput" value="0" readonly
+        title="Reflects the most recently logged week"/>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="thermo-col">
+      <svg width="72" height="300" viewBox="0 0 72 300">
+        <defs>
+          <clipPath id="mercuryClip">
+            <rect id="clipRect" x="26" y="20" width="20" height="240"/>
+          </clipPath>
+        </defs>
+        <rect x="26" y="20" width="20" height="240" rx="10" fill="#eeecea" stroke="#b4b2a9" stroke-width="0.5"/>
+        <rect id="mercury" x="26" y="260" width="20" height="0" rx="10" fill="#D85A30" clip-path="url(#mercuryClip)"/>
+        <line id="goalLine" x1="22" y1="20" x2="50" y2="20" stroke="#D85A30" stroke-width="1.5" stroke-dasharray="3,2"/>
+        <text id="goalLineLabel" x="52" y="24" font-size="10" fill="#888780">goal</text>
+        <circle cx="36" cy="276" r="18" fill="#eeecea" stroke="#b4b2a9" stroke-width="0.5"/>
+        <circle id="bulb" cx="36" cy="276" r="14" fill="#D85A30"/>
+        <text id="pctText" x="36" y="281" text-anchor="middle" font-size="11" font-weight="500" fill="white">0%</text>
+      </svg>
+      <div class="thermo-label" id="thermoCaption">Loading...</div>
+    </div>
+
+    <div class="stats-col">
+      <div class="stat-card">
+        <div class="s-label">This week (most recent)</div>
+        <div class="s-val" id="statCurrent">--</div>
+        <div class="s-sub" id="statPct">-- of weekly goal</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="s-label">Goal</div>
+          <div class="s-val" id="statGoal">$75,000</div>
+          <div class="s-sub">per week</div>
+        </div>
+        <div class="stat-card">
+          <div class="s-label">Gap</div>
+          <div class="s-val" id="statGap">--</div>
+          <div class="s-sub" id="statGapLabel">to reach goal</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="weeks-section">
+    <h3>Recent weeks</h3>
+    <div id="weeksList"><p style="font-size:13px;color:#888780;">Loading...</p></div>
+  </div>
+
+  <div class="log-section">
+    <h3>Log a week</h3>
+    <div class="log-form">
+      <div class="lf-field">
+        <label>Week label</label>
+        <input type="text" id="newLabel" placeholder="e.g. Wk 14" maxlength="20"/>
+      </div>
+      <div class="lf-field">
+        <label>Sales amount ($)</label>
+        <input type="number" id="newSales" placeholder="e.g. 68000" min="0" step="100"/>
+      </div>
+      <div class="lf-field">
+        <label>Week ending date</label>
+        <input type="date" id="newDate"/>
+      </div>
+      <button id="logBtn">+ Log week</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    Lighting Supply Guy &mdash; Weekly Sales Tracker &mdash; SharePoint List: WeeklySales &mdash; Source: QBO Sales by Customer Summary
+  </div>
+
+</div>
+
+<!-- MSAL.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.10.0/lib/msal-browser.min.js"></script>
+
+<script>
+/*
+================================================================
+CONFIGURATION — fill in all four values before hosting
+================================================================
+
+TENANT_ID   : ac94002d-ed28-40fb-b0ad-675cd7a9fc9c
+CLIENT_ID   : 31afbd48-7ad7-470b-b495-18ed9ed04f43
+SITE_ID     : https://graph.microsoft.com/v1.0/sites/lightingsupplyguy.sharepoint.com:/sites/root
+LIST_ID     : https://graph.microsoft.com/v1.0/sites/{SITE_ID}/lists?$filter=displayName eq 'WeeklySales'
+
+HOW TO FIND SITE_ID AND LIST_ID:
+After registering the Azure app and granting consent, sign in to
+https://developer.microsoft.com/graph/graph-explorer with your
+Microsoft 365 account, then run:
+
+  GET https://graph.microsoft.com/v1.0/sites/lightingsupplyguy.sharepoint.com:/sites/root
+  (copy the "id" value for SITE_ID)
+
+  GET https://graph.microsoft.com/v1.0/sites/{SITE_ID}/lists?$filter=displayName eq 'WeeklySales'
+  (copy the "id" value from results for LIST_ID)
+
+REDIRECT_URI:
+Set this to wherever you host the file. For GitHub Pages it would be
+something like https://yourusername.github.io/thermometer/index.html
+You must also register this exact URI in Azure Portal under
+App Registration > Authentication > Add a platform > Single-page application
+================================================================
+*/
+var TENANT_ID    = 'YOUR_TENANT_ID_HERE';
+var CLIENT_ID    = 'YOUR_CLIENT_ID_HERE';
+var SITE_ID      = 'YOUR_SHAREPOINT_SITE_ID_HERE';
+var LIST_ID      = 'YOUR_LIST_ID_HERE';
+var REDIRECT_URI = window.location.href.split('?')[0].split('#')[0];
+
+/*
+================================================================
+MSAL setup
+================================================================
+*/
+var msalConfig = {
+  auth: {
+    clientId:    CLIENT_ID,
+    authority:   'https://login.microsoftonline.com/' + TENANT_ID,
+    redirectUri: REDIRECT_URI
+  },
+  cache: { cacheLocation: 'sessionStorage' }
+};
+
+var msalInstance = new msal.PublicClientApplication(msalConfig);
+var SCOPES = ['Sites.ReadWrite.All'];
+var currentAccount = null;
+var accessToken    = null;
+
+/*
+================================================================
+Authentication helpers
+================================================================
+*/
+async function initAuth() {
+  await msalInstance.initialize();
+  var response = await msalInstance.handleRedirectPromise();
+  if (response) {
+    currentAccount = response.account;
+    accessToken    = response.accessToken;
+  } else {
+    var accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      currentAccount = accounts[0];
+      await acquireToken();
+    }
+  }
+  if (currentAccount) {
+    showApp();
+  } else {
+    showSignIn();
+  }
+}
+
+async function acquireToken() {
+  try {
+    var result = await msalInstance.acquireTokenSilent({
+      scopes:  SCOPES,
+      account: currentAccount
+    });
+    accessToken = result.accessToken;
+  } catch(e) {
+    await msalInstance.acquireTokenRedirect({ scopes: SCOPES });
+  }
+}
+
+function showSignIn() {
+  document.getElementById('signinScreen').style.display = 'block';
+  document.getElementById('appScreen').style.display    = 'none';
+}
+
+function showApp() {
+  document.getElementById('signinScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display    = 'block';
+  document.getElementById('userName').textContent =
+    currentAccount.name || currentAccount.username;
+  document.getElementById('newDate').valueAsDate = new Date();
+  refresh();
+}
+
+document.getElementById('signinBtn').addEventListener('click', function() {
+  msalInstance.loginRedirect({ scopes: SCOPES });
+});
+
+document.getElementById('signoutBtn').addEventListener('click', function() {
+  msalInstance.logoutRedirect({ account: currentAccount });
+});
+
+/*
+================================================================
+Graph API helpers
+================================================================
+*/
+var LIST_BASE = 'https://graph.microsoft.com/v1.0/sites/' + SITE_ID +
+                '/lists/' + LIST_ID + '/items';
+
+function graphHeaders() {
+  return {
+    'Authorization': 'Bearer ' + accessToken,
+    'Content-Type':  'application/json'
+  };
+}
+
+function setStatus(msg, type) {
+  var bar = document.getElementById('statusBar');
+  bar.textContent = msg;
+  bar.className   = 'status-bar' + (type ? ' ' + type : '');
+}
+
+async function fetchWeeks() {
+  setStatus('Loading data from SharePoint...');
+  try {
+    var url = LIST_BASE +
+      '?expand=fields(select=WeekLabel,SalesAmount,WeekEndingDate)' +
+      '&$orderby=fields/WeekEndingDate asc' +
+      '&$top=50';
+    var res = await fetch(url, { headers: graphHeaders() });
+    if (res.status === 401) {
+      await acquireToken();
+      res = await fetch(url, { headers: graphHeaders() });
+    }
+    if (!res.ok) {
+      var err = await res.json();
+      throw new Error('Graph API ' + res.status + ': ' + (err.error && err.error.message || 'unknown'));
+    }
+    var data = await res.json();
+    var weeks = (data.value || []).map(function(item) {
+      var f = item.fields || {};
+      return {
+        id:    item.id,
+        label: f.WeekLabel       || '',
+        sales: parseFloat(f.SalesAmount)    || 0,
+        date:  f.WeekEndingDate  ? f.WeekEndingDate.substring(0, 10) : ''
+      };
+    });
+    setStatus('Last refreshed: ' + new Date().toLocaleString(), 'success');
+    return weeks;
+  } catch(e) {
+    setStatus('Error loading data: ' + e.message, 'error');
+    return [];
+  }
+}
+
+async function createWeek(label, sales, date) {
+  var res = await fetch(LIST_BASE, {
+    method:  'POST',
+    headers: graphHeaders(),
+    body: JSON.stringify({
+      fields: {
+        WeekLabel:      label,
+        SalesAmount:    sales,
+        WeekEndingDate: date + 'T00:00:00Z'
+      }
+    })
+  });
+  if (!res.ok) {
+    var err = await res.json();
+    throw new Error(err.error && err.error.message || 'Create failed');
+  }
+  return await res.json();
+}
+
+async function deleteWeek(id) {
+  var res = await fetch(LIST_BASE + '/' + id, {
+    method:  'DELETE',
+    headers: graphHeaders()
+  });
+  if (!res.ok) throw new Error('Delete failed ' + res.status);
+}
+
+/*
+================================================================
+Thermometer rendering
+================================================================
+*/
+var THERMO_H   = 240;
+var THERMO_TOP = 20;
+
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function getColor(pct) {
+  if (pct >= 1)    return '#1D9E75';
+  if (pct >= 0.75) return '#BA7517';
+  return '#D85A30';
+}
+
+function renderThermometer(current, goal) {
+  var pct      = goal > 0 ? current / goal : 0;
+  var capped   = Math.min(pct, 1.5);
+  var color    = getColor(pct);
+  var fillH    = Math.min(THERMO_H, capped * THERMO_H);
+  var mercuryY = THERMO_TOP + THERMO_H - fillH;
+
+  document.getElementById('mercury').setAttribute('y', mercuryY);
+  document.getElementById('mercury').setAttribute('height', fillH + 60);
+  document.getElementById('mercury').setAttribute('fill', color);
+  document.getElementById('bulb').setAttribute('fill', color);
+  document.getElementById('clipRect').setAttribute('y', mercuryY);
+  document.getElementById('clipRect').setAttribute('height', fillH + 1);
+  document.getElementById('pctText').textContent = Math.round(pct * 100) + '%';
+  document.getElementById('thermoCaption').textContent = fmt(current) + ' of ' + fmt(goal);
+
+  document.getElementById('statCurrent').textContent = fmt(current);
+  document.getElementById('statCurrent').style.color = color;
+  document.getElementById('statPct').textContent     = Math.round(pct * 100) + '% of weekly goal';
+  document.getElementById('statGoal').textContent    = fmt(goal);
+
+  var gap = goal - current;
+  document.getElementById('statGap').textContent     = fmt(Math.abs(gap));
+  document.getElementById('statGapLabel').textContent = gap > 0 ? 'to reach goal' : 'above goal';
+  document.getElementById('statGap').style.color     = gap <= 0 ? '#1D9E75' : '#1a1a18';
+}
+
+function renderWeeksList(weeks, goal) {
+  var list = document.getElementById('weeksList');
+  list.innerHTML = '';
+  if (!weeks.length) {
+    list.innerHTML = '<p style="font-size:13px;color:#888780;">No weeks logged yet. Use the form below to add the first entry.</p>';
+    return;
+  }
+  var maxSales = Math.max.apply(null, weeks.map(function(w){ return w.sales; }).concat([goal]));
+  weeks.slice().reverse().forEach(function(w) {
+    var pct    = w.sales / goal;
+    var barPct = Math.min(w.sales / maxSales * 100, 100);
+    var color  = getColor(pct);
+    var row    = document.createElement('div');
+    row.className = 'week-row';
+    row.innerHTML =
+      '<span class="wk-label">' + (w.label || '--')          + '</span>' +
+      '<span class="wk-date">'  + (w.date  || '')            + '</span>' +
+      '<div class="wk-bar-wrap"><div class="wk-bar" style="width:' + barPct.toFixed(1) + '%;background:' + color + ';"></div></div>' +
+      '<span class="wk-amt">'   + fmt(w.sales)               + '</span>' +
+      '<span class="wk-pct">'   + Math.round(pct * 100) + '%'+ '</span>' +
+      '<span class="remove-btn" data-id="' + w.id + '" title="Delete from SharePoint">&#x2715;</span>';
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.remove-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      var label = btn.closest('.week-row').querySelector('.wk-label').textContent;
+      if (!confirm('Delete "' + label + '" from SharePoint?')) return;
+      setStatus('Deleting...');
+      try {
+        await deleteWeek(btn.dataset.id);
+        await refresh();
+      } catch(e) {
+        setStatus('Delete failed: ' + e.message, 'error');
+      }
+    });
+  });
+}
+
+var allWeeks = [];
+
+async function refresh() {
+  allWeeks = await fetchWeeks();
+  var goal    = parseFloat(document.getElementById('goalInput').value) || 75000;
+  var current = allWeeks.length ? allWeeks[allWeeks.length - 1].sales : 0;
+  document.getElementById('currentInput').value = current;
+  renderThermometer(current, goal);
+  renderWeeksList(allWeeks, goal);
+}
+
+document.getElementById('goalInput').addEventListener('input', function() {
+  var goal    = parseFloat(this.value) || 75000;
+  var current = allWeeks.length ? allWeeks[allWeeks.length - 1].sales : 0;
+  renderThermometer(current, goal);
+  renderWeeksList(allWeeks, goal);
+});
+
+document.getElementById('logBtn').addEventListener('click', async function() {
+  var label = document.getElementById('newLabel').value.trim();
+  var sales = parseFloat(document.getElementById('newSales').value);
+  var date  = document.getElementById('newDate').value;
+
+  if (!label)              { setStatus('Please enter a week label (e.g. Wk 14).', 'error'); return; }
+  if (!sales || sales < 0) { setStatus('Please enter a valid sales amount.',       'error'); return; }
+  if (!date)               { setStatus('Please select a week ending date.',         'error'); return; }
+
+  document.getElementById('logBtn').disabled = true;
+  setStatus('Saving to SharePoint...');
+  try {
+    await createWeek(label, sales, date);
+    document.getElementById('newLabel').value = '';
+    document.getElementById('newSales').value = '';
+    document.getElementById('newDate').value  = '';
+    await refresh();
+    setStatus('Week logged successfully.', 'success');
+  } catch(e) {
+    setStatus('Save failed: ' + e.message, 'error');
+  }
+  document.getElementById('logBtn').disabled = false;
+});
+
+/* kick off auth on page load */
+initAuth();
+</script>
+</body>
+</html>
