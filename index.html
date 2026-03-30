@@ -431,7 +431,8 @@ var LIST_BASE = 'https://graph.microsoft.com/v1.0/sites/' + SITE_ID +
 function graphHeaders() {
   return {
     'Authorization': 'Bearer ' + accessToken,
-    'Content-Type':  'application/json'
+    'Content-Type':  'application/json',
+    'Prefer':        'HonorNonIndexedQueriesWarningMayFailRandomly'
   };
 }
 
