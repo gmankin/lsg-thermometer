@@ -446,7 +446,7 @@ async function fetchWeeks() {
   setStatus('Loading data from SharePoint...');
   try {
     var url = LIST_BASE +
-      '?expand=fields(select=WeekLabel,SalesAmount,WeekEndingDate)' +
+      '?expand=fields(select=Title,SalesAmount,WeekEndingDate)'+
       '&$orderby=fields/WeekEndingDate asc' +
       '&$top=50';
     var res = await fetch(url, { headers: graphHeaders() });
@@ -463,7 +463,7 @@ async function fetchWeeks() {
       var f = item.fields || {};
       return {
         id:    item.id,
-        label: f.WeeklyLabel       || '',
+        label: f.Title       || '',
         sales: parseFloat(f.SalesAmount)    || 0,
         date:  f.WeekEndingDate  ? f.WeekEndingDate.substring(0, 10) : ''
       };
@@ -482,7 +482,7 @@ async function createWeek(label, sales, date) {
     headers: graphHeaders(),
     body: JSON.stringify({
       fields: {
-        WeeklyLabel:      label,
+        Title:      label,
         SalesAmount:    sales,
         WeekEndingDate: date + 'T00:00:00Z'
       }
