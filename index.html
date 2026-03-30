@@ -463,7 +463,7 @@ async function fetchWeeks() {
       var f = item.fields || {};
       return {
         id:    item.id,
-        label: f.WeekLabel       || '',
+        label: f.WeeklyLabel       || '',
         sales: parseFloat(f.SalesAmount)    || 0,
         date:  f.WeekEndingDate  ? f.WeekEndingDate.substring(0, 10) : ''
       };
