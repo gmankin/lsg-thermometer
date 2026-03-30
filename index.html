@@ -482,7 +482,7 @@ async function createWeek(label, sales, date) {
     headers: graphHeaders(),
     body: JSON.stringify({
       fields: {
-        WeekLabel:      label,
+        WeeklyLabel:      label,
         SalesAmount:    sales,
         WeekEndingDate: date + 'T00:00:00Z'
       }
