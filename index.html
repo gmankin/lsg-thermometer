@@ -225,7 +225,7 @@
   <div class="controls">
     <div class="field">
       <label>Weekly goal ($)</label>
-      <input type="number" id="goalInput" value="75000" min="0" step="1000" />
+      <input type="number" id="goalInput" value="100000" min="0" step="1000" />
     </div>
     <div class="field">
       <label>Current week (most recent)</label>
@@ -590,7 +590,7 @@ var allWeeks = [];
 
 async function refresh() {
   allWeeks = await fetchWeeks();
-  var goal    = parseFloat(document.getElementById('goalInput').value) || 75000;
+  var goal    = parseFloat(document.getElementById('goalInput').value) || 100000;
   var current = allWeeks.length ? allWeeks[allWeeks.length - 1].sales : 0;
   document.getElementById('currentInput').value = current;
   renderThermometer(current, goal);
@@ -598,7 +598,7 @@ async function refresh() {
 }
 
 document.getElementById('goalInput').addEventListener('input', function() {
-  var goal    = parseFloat(this.value) || 75000;
+  var goal    = parseFloat(this.value) || 100000;
   var current = allWeeks.length ? allWeeks[allWeeks.length - 1].sales : 0;
   renderThermometer(current, goal);
   renderWeeksList(allWeeks, goal);
